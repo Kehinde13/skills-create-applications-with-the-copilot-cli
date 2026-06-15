@@ -7,11 +7,8 @@
 //  - multiplication: ×, x, * or multiply
 //  - division: ÷, / or divide
 //
-// Usage examples:
-//  node src/calculator.js add 2 3        => 5
-//  node src/calculator.js 2 + 3          => 5
-//  node src/calculator.js 10 / 2         => 5
-//  node src/calculator.js multiply 2 4   => 8
+// This file exposes helper functions for unit testing and also acts as a CLI
+// when executed directly (node src/calculator.js ...).
 
 const args = process.argv.slice(2);
 
@@ -20,10 +17,6 @@ function usage() {
     '  or: node src/calculator.js <a> <op> <b>\n' +
     'Operations: add (+), subtract (-), multiply (*, x, ×), divide (/, ÷)');
   process.exit(1);
-}
-
-if (args.length === 0) {
-  usage();
 }
 
 function toNumber(v) {
@@ -56,46 +49,64 @@ function performOperation(op, a, b) {
   }
 }
 
-let op = null;
-let aArg = null;
-let bArg = null;
-
-if (args.length >= 3 && ['add','subtract','multiply','divide','+','-','*','x','×','/','÷'].includes(args[0])) {
-  // form: <op> <a> <b>
-  op = args[0];
-  aArg = args[1];
-  bArg = args[2];
-} else if (args.length >= 3 && ['+','-','*','x','×','/','÷'].includes(args[1])) {
-  // form: <a> <op> <b>
-  aArg = args[0];
-  op = args[1];
-  bArg = args[2];
-} else if (args.length >= 3 && ['add','subtract','multiply','divide'].includes(args[1])) {
-  // form: <a> <opword> <b>
-  aArg = args[0];
-  op = args[1];
-  bArg = args[2];
-} else {
-  usage();
-}
-
-const a = toNumber(aArg);
-const b = toNumber(bArg);
-if (a === null || b === null) {
-  console.error('Error: invalid number input. Received:', aArg, bArg);
-  process.exit(1);
-}
-
-try {
-  const result = performOperation(op.toLowerCase(), a, b);
-  // Print result in a clean form (avoid scientific notation for common cases)
-  if (Number.isInteger(result)) {
-    console.log(result);
-  } else {
-    console.log(result);
+function parseArgs(argv) {
+  // returns {op, aArg, bArg} or throws
+  if (!argv || argv.length === 0) {
+    throw new Error('no-args');
   }
-  process.exit(0);
-} catch (err) {
-  console.error(err.message);
-  process.exit(1);
+
+  let op = null;
+  let aArg = null;
+  let bArg = null;
+
+  if (argv.length >= 3 && ['add','subtract','multiply','divide','+','-','*','x','×','/','÷'].includes(argv[0])) {
+    // form: <op> <a> <b>
+    op = argv[0];
+    aArg = argv[1];
+    bArg = argv[2];
+  } else if (argv.length >= 3 && ['+','-','*','x','×','/','÷'].includes(argv[1])) {
+    // form: <a> <op> <b>
+    aArg = argv[0];
+    op = argv[1];
+    bArg = argv[2];
+  } else if (argv.length >= 3 && ['add','subtract','multiply','divide'].includes(argv[1])) {
+    // form: <a> <opword> <b>
+    aArg = argv[0];
+    op = argv[1];
+    bArg = argv[2];
+  } else {
+    throw new Error('bad-args');
+  }
+
+  return { op, aArg, bArg };
+}
+
+// Export functions for unit testing
+module.exports = { toNumber, performOperation, parseArgs };
+
+// CLI entrypoint when executed directly
+if (require.main === module) {
+  if (args.length === 0) {
+    usage();
+  }
+
+  try {
+    const { op, aArg, bArg } = parseArgs(args);
+    const a = toNumber(aArg);
+    const b = toNumber(bArg);
+    if (a === null || b === null) {
+      console.error('Error: invalid number input. Received:', aArg, bArg);
+      process.exit(1);
+    }
+
+    const result = performOperation(op.toLowerCase(), a, b);
+    console.log(result);
+    process.exit(0);
+  } catch (err) {
+    if (err && (err.message === 'no-args' || err.message === 'bad-args')) {
+      usage();
+    }
+    console.error(err.message || err);
+    process.exit(1);
+  }
 }
