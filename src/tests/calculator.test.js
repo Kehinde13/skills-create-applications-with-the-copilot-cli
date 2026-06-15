@@ -1,4 +1,4 @@
-const { performOperation, toNumber, parseArgs } = require('../calculator');
+const { performOperation, toNumber, parseArgs, modulo, power, squareRoot } = require('../calculator');
 
 describe('Calculator basic operations', () => {
   test('2 + 3 = 5', () => {
@@ -48,5 +48,36 @@ describe('Calculator edge cases and parsing', () => {
     expect(() => parseArgs([])).toThrow();
     expect(() => parseArgs(['1'])).toThrow();
     expect(() => parseArgs(['1','2'])).toThrow();
+  });
+});
+
+// Extended operations tests: modulo, power, squareRoot
+describe('Extended operations: modulo, power, square root', () => {
+  test('5 % 2 = 1 (modulo)', () => {
+    expect(modulo(5, 2)).toBe(1);
+    expect(performOperation('%', 5, 2)).toBe(1);
+    expect(performOperation('mod', 5, 2)).toBe(1);
+  });
+
+  test('Modulo by zero throws', () => {
+    expect(() => modulo(5, 0)).toThrow(/Division by zero/);
+    expect(() => performOperation('%', 5, 0)).toThrow(/Division by zero/);
+  });
+
+  test('2 ^ 3 = 8 (power)', () => {
+    expect(power(2, 3)).toBe(8);
+    expect(performOperation('**', 2, 3)).toBe(8);
+    expect(performOperation('^', 2, 3)).toBe(8);
+    expect(performOperation('pow', 2, 3)).toBe(8);
+  });
+
+  test('square root of 16 = 4', () => {
+    expect(squareRoot(16)).toBe(4);
+    expect(performOperation('sqrt', 16)).toBe(4);
+  });
+
+  test('square root of negative number throws', () => {
+    expect(() => squareRoot(-9)).toThrow(/Square root of negative/);
+    expect(() => performOperation('sqrt', -9)).toThrow(/Square root of negative/);
   });
 });
