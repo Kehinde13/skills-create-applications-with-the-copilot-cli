@@ -27,6 +27,21 @@ function toNumber(v) {
   return Number.isFinite(n) ? n : null;
 }
 
+// New helper functions requested
+function modulo(a, b) {
+  if (b === 0) throw new Error('Error: Division by zero');
+  return a % b;
+}
+
+function power(base, exponent) {
+  return Math.pow(base, exponent);
+}
+
+function squareRoot(n) {
+  if (n < 0) throw new Error('Error: Square root of negative number');
+  return Math.sqrt(n);
+}
+
 function performOperation(op, a, b) {
   switch (op) {
     case 'add':
@@ -47,6 +62,16 @@ function performOperation(op, a, b) {
         throw new Error('Error: Division by zero');
       }
       return a / b;
+    case 'mod':
+    case '%':
+      return modulo(a, b);
+    case 'pow':
+    case '**':
+    case '^':
+      return power(a, b);
+    case 'sqrt':
+    case '√':
+      return squareRoot(a);
     default:
       throw new Error('Unsupported operation: ' + op);
   }
@@ -62,30 +87,43 @@ function parseArgs(argv) {
   let aArg = null;
   let bArg = null;
 
-  if (argv.length >= 3 && ['add','subtract','multiply','divide','+','-','*','x','×','/','÷'].includes(argv[0])) {
-    // form: <op> <a> <b>
+  // Unary sqrt: <op> <a>
+  if (argv.length >= 2 && ['sqrt','√'].includes(argv[0])) {
+    op = argv[0];
+    aArg = argv[1];
+    bArg = null;
+    return { op, aArg, bArg };
+  }
+
+  // Form: <op> <a> <b>
+  if (argv.length >= 3 && ['add','subtract','multiply','divide','mod','pow','+','-','*','x','×','/','÷','%','**','^'].includes(argv[0])) {
     op = argv[0];
     aArg = argv[1];
     bArg = argv[2];
-  } else if (argv.length >= 3 && ['+','-','*','x','×','/','÷'].includes(argv[1])) {
-    // form: <a> <op> <b>
-    aArg = argv[0];
-    op = argv[1];
-    bArg = argv[2];
-  } else if (argv.length >= 3 && ['add','subtract','multiply','divide'].includes(argv[1])) {
-    // form: <a> <opword> <b>
-    aArg = argv[0];
-    op = argv[1];
-    bArg = argv[2];
-  } else {
-    throw new Error('bad-args');
+    return { op, aArg, bArg };
   }
 
-  return { op, aArg, bArg };
+  // Form: <a> <op> <b>
+  if (argv.length >= 3 && ['+','-','*','x','×','/','÷','%','**','^'].includes(argv[1])) {
+    aArg = argv[0];
+    op = argv[1];
+    bArg = argv[2];
+    return { op, aArg, bArg };
+  }
+
+  // Form: <a> <opword> <b>
+  if (argv.length >= 3 && ['add','subtract','multiply','divide','mod','pow'].includes(argv[1])) {
+    aArg = argv[0];
+    op = argv[1];
+    bArg = argv[2];
+    return { op, aArg, bArg };
+  }
+
+  throw new Error('bad-args');
 }
 
 // Export functions for unit testing
-module.exports = { toNumber, performOperation, parseArgs };
+module.exports = { toNumber, performOperation, parseArgs, modulo, power, squareRoot };
 
 // CLI entrypoint when executed directly
 if (require.main === module) {
@@ -95,6 +133,19 @@ if (require.main === module) {
 
   try {
     const { op, aArg, bArg } = parseArgs(args);
+
+    // unary sqrt
+    if (op === 'sqrt' || op === '√') {
+      const a = toNumber(aArg);
+      if (a === null) {
+        console.error('Error: invalid number input. Received:', aArg);
+        process.exit(1);
+      }
+      const result = performOperation(op.toLowerCase(), a, null);
+      console.log(result);
+      process.exit(0);
+    }
+
     const a = toNumber(aArg);
     const b = toNumber(bArg);
     if (a === null || b === null) {
