@@ -20,6 +20,9 @@ function usage() {
 }
 
 function toNumber(v) {
+  // Treat empty or whitespace-only strings as invalid input
+  if (v === undefined || v === null) return null;
+  if (String(v).trim() === '') return null;
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
 }
